@@ -66,14 +66,14 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            docker pull adama55/backend_image:latest &&
-            docker pull adama55/frontend_image:latest &&
+            sudo docker pull adama55/backend_image:latest &&
+            sudo docker pull adama55/frontend_image:latest &&
 
-            docker stop backend_container || true &&
-            docker rm backend_container || true &&
-            docker run -d --name backend_container -p 8000:8000 adama55/backend_image:latest &&
+            sudo docker stop backend_container || true &&
+            sudo docker rm backend_container || true &&
+            sudo docker run -d --name backend_container -p 8000:8000 adama55/backend_image:latest &&
 
-            docker stop frontend_container || true &&
-            docker rm frontend_container || true &&
-            docker run -d --name frontend_container -p 80:80 adama55/frontend_image:latest
+            sudo docker stop frontend_container || true &&
+            sudo docker rm frontend_container || true &&
+            sudo docker run -d --name frontend_container -p 80:80 adama55/frontend_image:latest
           "
