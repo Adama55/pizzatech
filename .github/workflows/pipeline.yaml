@@ -2,10 +2,10 @@ name: Pipeline
 
 on:
   workflow_dispatch:
-#  push:
-#    branches: [ main ]
-#  pull_request:
-#    branches: [ main ]
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
 
 jobs:
   test:
@@ -46,3 +46,34 @@ jobs:
           DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}
         run: |
           pytest
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+            docker pull adama55/backend_image:latest &&
+            docker pull adama55/frontend_image:latest &&
+
+            docker stop backend_container || true &&
+            docker rm backend_container || true &&
+            docker run -d --name backend_container -p 8000:8000 adama55/backend_image:latest &&
+
+            docker stop frontend_container || true &&
+            docker rm frontend_container || true &&
+            docker run -d --name frontend_container -p 80:80 adama55/frontend_image:latest
+          "
