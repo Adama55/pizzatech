@@ -76,7 +76,7 @@ jobs:
           push: true
           tags: adama55/frontend-image:latest
   deploy:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     if: success()
 
