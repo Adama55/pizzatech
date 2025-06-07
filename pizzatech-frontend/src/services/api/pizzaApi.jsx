@@ -1,7 +1,7 @@
 // src/services/api/pizzaApi.js
 import axios from "axios";
 
-const API_URL = "http://localhost:8000"; //
+const API_URL = "http://ec2-16-171-151-44.eu-north-1.compute.amazonaws.com:8000"; //
 
 export const getPizzas = async () => {
     try {
