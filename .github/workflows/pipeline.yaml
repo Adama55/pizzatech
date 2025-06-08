@@ -18,7 +18,6 @@ jobs:
           POSTGRES_USER: ${{ secrets.DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
           POSTGRES_DB: ${{ secrets.DB_NAME }}
-          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}
         ports:
           - 5432:5432
         options: >-
@@ -38,16 +37,13 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./pizzatech-backend
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run tests
         working-directory: ./pizzatech-backend
         env:
           DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}
-        run: |
-          pytest
-
+        run: pytest
 
   build:
     needs: test
@@ -77,10 +73,17 @@ jobs:
           context: ./pizzatech-frontend
           push: true
           tags: adama55/frontend-image:latest
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
     if: success()
+    env:  # ✅ Variables d'environnement définies au bon niveau
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       - name: Checkout code
@@ -96,24 +99,22 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            sudo docker pull adama55/backend-image:latest &&
-            sudo docker pull adama55/frontend-image:latest &&
+            docker pull adama55/backend-image:latest &&
+            docker pull adama55/frontend-image:latest &&
 
-            sudo docker stop backend_container || true &&
-            sudo docker rm backend_container || true &&
-            sudo docker stop frontend_container || true &&
-            sudo docker rm frontend_container || true &&
-          
-            sudo docker run -d \
+            docker stop backend_container || true &&
+            docker rm backend_container || true &&
+            docker stop frontend_container || true &&
+            docker rm frontend_container || true &&
+
+            docker run -d \
               --name backend_container \
               -p 8000:8000 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              adama55/backend-image:latest
-            
-            sudo docker run -d --name frontend_container -p 80:80 adama55/frontend-image:latest
+              -e DATABASE_URL=${DATABASE_URL} \
+              adama55/backend-image:latest &&
+
+            docker run -d \
+              --name frontend_container \
+              -p 80:80 \
+              adama55/frontend-image:latest
           "
-          env:
-            DB_USER: ${{ secrets.DB_USER }}
-            DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-            DB_NAME: ${{ secrets.DB_NAME }}
-            DB_HOST: ${{ secrets.DB_HOST }}
