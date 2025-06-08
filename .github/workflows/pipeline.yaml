@@ -68,6 +68,8 @@ jobs:
           context: ./pizzatech-backend
           push: true
           tags: adama55/backend-image:latest
+          build-args: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v2
@@ -105,7 +107,7 @@ jobs:
             sudo docker run -d \
               --name backend_container \
               -p 8000:8000 \
-              -e DATABASE_URL='postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:5432/$DB_NAME' \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               adama55/backend-image:latest
             
             sudo docker run -d --name frontend_container -p 80:80 adama55/frontend-image:latest

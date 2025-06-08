@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   backend:
-    build: ./pizzatech-backend
+    build:
+      context: ./pizzatech-backend
+      args:
+        DATABASE_URL: ${DATABASE_URL}
     ports:
       - "8000:8000"
     env_file:
