@@ -99,14 +99,15 @@ jobs:
 
             sudo docker stop backend_container || true &&
             sudo docker rm backend_container || true &&
+            sudo docker stop frontend_container || true &&
+            sudo docker rm frontend_container || true &&
+          
             sudo docker run -d \
               --name backend_container \
               -p 8000:8000 \
               -e DATABASE_URL='postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:5432/$DB_NAME' \
               adama55/backend-image:latest
-
-            sudo docker stop frontend_container || true &&
-            sudo docker rm frontend_container || true &&
+            
             sudo docker run -d --name frontend_container -p 80:80 adama55/frontend-image:latest
           "
           env:
